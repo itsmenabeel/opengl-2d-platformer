@@ -16,6 +16,8 @@ player_health = 5
 player_score = 0
 player_immune = 1
 last_hit_time = 0  # Timestamp of the last time the player was hit
+isPaused = False  # Flag to indicate if the game is paused
+isGameOver = False  # Flag to indicate if the game is over
 
 velocity_y = 0  # Initial vertical velocity of the player
 isJumping = False  # Flag to indicate if the player is jumping
@@ -75,7 +77,7 @@ def updateBullets(delta_time):
     for bullet in bullets:
         x, y, direction = bullet
         x += bullet_speed * delta_time if direction == "right" else -bullet_speed * delta_time  # Move the bullet
-        # Check for collision with platforms
+        # Check for collision with platforms and enemies
         if not collision.bulletCollision(x, y) and not collision.enemyBulletCollision(x, y):
             new_bullets.append((x, y, direction))
 
@@ -84,15 +86,11 @@ def updateBullets(delta_time):
             print(player_score)
 
     bullets = new_bullets
-    
-        
-
-# def updatePlatforms_brittle():
-#     pass
+           
 
 
 def keyboard(key, x, y):
-    global player_x, player_y, velocity_y, isJumping, move_left, move_right, gun_side
+    global player_x, player_y, velocity_y, isJumping, move_left, move_right, gun_side, isPaused, last_time
     if key == b'a' or key == b'A':
         move_left = True
         gun_side = "left"
@@ -102,6 +100,10 @@ def keyboard(key, x, y):
     elif key == b' ' and not isJumping:
         velocity_y = jump_strength
         isJumping = True
+    elif key == b'q' or key == b'Q':
+        isPaused = not isPaused
+        print("Game Paused") if isPaused else print("Game Resumed")
+        last_time = time.time()
     
         
 def keyboardUp(key, x, y):
@@ -147,13 +149,14 @@ def display():
     
     
 def animate(value):
-    global last_time
-    current_time = time.time()
-    delta_time = current_time - last_time
-    last_time = current_time
-    updatePlayer(delta_time)
-    updateBullets(delta_time)
-    assets.moveRunnerEnemies(delta_time)
+    global last_time, isGameOver, isPaused
+    if not isGameOver and not isPaused:
+        current_time = time.time()
+        delta_time = current_time - last_time
+        last_time = current_time
+        updatePlayer(delta_time)
+        updateBullets(delta_time)
+        assets.moveRunnerEnemies(delta_time, isPaused)
 
     glutPostRedisplay()
     glutTimerFunc(16, animate, 0)

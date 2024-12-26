@@ -54,18 +54,19 @@ def runnerEnemy():
 # runnerEnemy moves left to right
 
 
-def moveRunnerEnemies(dt):
+def moveRunnerEnemies(dt, isPaused):
     global runnerEnemies, enemyMove
-    for i in range(len(runnerEnemies)):
-        initx, x, y, bound, move = runnerEnemies[i]
-        
+    if not isPaused:
+        for i in range(len(runnerEnemies)):
+            initx, x, y, bound, move = runnerEnemies[i]
+            
 
-        if x <= initx:
-            move = -1 * move  # move to the left
-               # move to the right
-        elif x+20 >= initx+bound:  # assuming the screen width is 800
-            move = -1 * move  # move to the left
-        
-        x += move * dt * 20
-        
-        runnerEnemies[i] = (initx, x, y, bound, move)
+            if x <= initx:
+                move = abs(move)  # move to the left
+                # move to the right
+            elif x+20 >= initx+bound:  # assuming the screen width is 800
+                move = -abs(move)  # move to the left
+            
+            x += move * dt * 20
+            
+            runnerEnemies[i] = (initx, x, y, bound, move)
