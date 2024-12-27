@@ -9,7 +9,9 @@ import collision
 import config
 import level_1 as l1
 import menu  # Import the menu module
-from menu import diff_health
+from menu import diff_health  # Import the diff_health variable from the menu module
+import end  # Import the end module
+import os
 # global variables
 player_x = -500  # Initial x-coordinate of the player's head
 player_y = -540  # Initial y-coordinate of the player's head
@@ -86,6 +88,10 @@ def updatePlayer(delta_time):
             last_hit_time = cur_time
             if player_health == 0:
                 isGameOver = True
+                print("Game Over")
+                print(f"Your score is {player_score}")
+                end.show_end_screen(player_score)
+  
         else:
             player_immune = False
                            
@@ -247,10 +253,12 @@ def display():
     
 def animate(value):
     global last_time, isGameOver, isPaused, player_score
+
     if isGameOver:
         print(f"Game Over! Your score is {player_score}")
-        glutLeaveMainLoop()
-        return
+        end.show_end_screen(player_score)  # Show the end screen
+        return  # Stop further game updates
+
     if not isGameOver and not isPaused:
         current_time = time.time()
         delta_time = current_time - last_time
@@ -263,7 +271,6 @@ def animate(value):
 
     glutPostRedisplay()
     glutTimerFunc(16, animate, 0)
-    
 
 
 def initialize():

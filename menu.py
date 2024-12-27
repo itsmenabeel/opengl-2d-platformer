@@ -23,6 +23,15 @@ def draw_menu():
     if menu_active:
         glClear(GL_COLOR_BUFFER_BIT)
 
+        # Draw the Game Name (Large Title)
+        glColor3f(1.0, 1.0, 0.0)  # Yellow color for the game name
+        glPushMatrix()
+        glTranslatef(-350, 300, 0)  # Move to the top center
+        glScalef(0.5, 0.5, 1.0)    # Scale up the text to make it larger
+        for char in "THE AMERICAN MARIO":
+            glutStrokeCharacter(GLUT_STROKE_ROMAN, ord(char))
+        glPopMatrix()
+
         # Draw button outlines using midpoint line algorithm
         # Play Button
         midpoint_line_8way(-200, 50, 200, 50, 3, (0, 1, 0))   # Bottom
