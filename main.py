@@ -9,13 +9,15 @@ import collision
 import config
 import level_1 as l1
 import menu  # Import the menu module
-
+from menu import diff_health
 # global variables
 player_x = -500  # Initial x-coordinate of the player's head
 player_y = -540  # Initial y-coordinate of the player's head
 gravity = -300  # Acceleration due to gravity
 player_speed = 300  # Speed of the player
-player_health = 5
+#player_health = diff_health
+#print(f"Starting game with player_health: {player_health}")  # Debug print
+player_health = 0  # Initialize player health with diff_health
 player_score = 0
 player_immune = False  # Flag to indicate if the player is immune to damage
 blinking = False  # Flag to indicate if the player model is blinking
@@ -54,6 +56,8 @@ def updatePlayer(delta_time):
     global player_x, player_y, player_health, gravity, velocity_y, isJumping, move_left, move_right, fireballs
     global last_hit_time, isGameOver, invincible_time, blink_interval, last_blink_time, player_immune, blinking
     # Apply gravity
+
+    print(f"Starting game with player_health: {player_health}")  # Debug print
     velocity_y += gravity * 2 * delta_time
     new_y = player_y + int(velocity_y * 2 * delta_time)
 
@@ -78,6 +82,7 @@ def updatePlayer(delta_time):
             player_health -= 1
             player_immune = True
             print(player_health)
+            print("Player Health: ", player_health)
             last_hit_time = cur_time
             if player_health == 0:
                 isGameOver = True
@@ -280,10 +285,13 @@ glutCreateWindow(b"Platformer")
 menu.show_menu()
 
 def check_menu(value=0):
+    global player_health
     """Checks if the menu is active and transitions to the game if needed."""
     print(f"Checking menu - play_clicked is: {menu.play_clicked}")
     if menu.play_clicked:
         print("Starting game...")
+        player_health = menu.diff_health
+
         initialize()  # Initialize game OpenGL settings
         glutDisplayFunc(display)  # Set the game display function
         glutKeyboardFunc(keyboard)
