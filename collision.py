@@ -123,3 +123,42 @@ def enemyBulletCollision(bullet_x, bullet_y):
             return True
 
     return False
+
+
+
+
+
+
+#atik
+
+def movingPlatformCollision(player_x, player_y, moving_platforms):
+    """
+    Detects if the player is colliding with any moving platform.
+
+    Parameters:
+    - player_x: float - The player's x-coordinate.
+    - player_y: float - The player's y-coordinate.
+    - moving_platforms: list - List of moving platforms with their attributes.
+
+    Returns:
+    - dict or None: Returns the collided platform's data if collision occurs, otherwise None.
+    """
+    player_left = player_x - 12
+    player_right = player_x + 12
+    player_top = player_y + 8
+    player_bottom = player_y - 39
+
+    for platform in moving_platforms:
+        platform_x = platform['x']
+        platform_y = platform['y']
+        platform_length = platform['length']
+
+        # Adjust height alignment
+        platform_top = platform_y + 10  # Top surface of the platform
+        if (
+            platform_x <= player_x <= platform_x + platform_length  # Horizontal collision
+            and player_bottom <= platform_top <= player_top         # Vertical collision
+        ):
+            return platform  # Return the platform data
+
+    return None  # No collision detected

@@ -160,3 +160,8 @@ class MidpointCircle:
                 elif zone == 7:
                     drawPixel(int(x_center + y), int(y_center - x), pointSize, color)  # Zone - 7 (y, -x)
                    
+
+
+# Function to draw a line using the midpoint algorithm (8-way symmetry)
+def midpoint_line_8way(x1, y1, x2, y2, pointSize=1, color=(1, 1, 1)):
+    MidpointLine(x1, y1, x2, y2, pointSize=pointSize, color=color)

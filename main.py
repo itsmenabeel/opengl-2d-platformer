@@ -6,6 +6,7 @@ import time
 import midpoint_line_circle as shapes
 import assets
 import collision
+import menu  # Import the menu module
 
 # global variables
 player_x = -500  # Initial x-coordinate of the player's head
@@ -127,7 +128,8 @@ def mouse(button, state, x, y):
 
 def display():
     global gun_side, player_x, player_y, platforms
-    glClear(GL_COLOR_BUFFER_BIT)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # Clear the screen
+    glLoadIdentity()  # Reset the transformation matrix
     shapes.MidpointLine(-800, -600, 800, -600)
     
     for platform in platforms:
@@ -158,23 +160,43 @@ def animate(value):
     glutPostRedisplay()
     glutTimerFunc(16, animate, 0)
     
-    
-# Initialize the game
+
+
 def initialize():
-    glClearColor(0.0, 0.0, 0.0, 0.0)
-    gluOrtho2D(-800, 800, -800, 800)
+    """Initialize OpenGL settings for the game."""
+    glClearColor(0.0, 0.0, 0.0, 0.0)  # Set the background color to black
+    glMatrixMode(GL_PROJECTION)  # Set the projection matrix
+    glLoadIdentity()
+    gluOrtho2D(-800, 800, -800, 800)  # Set up a 2D orthographic projection
+    glMatrixMode(GL_MODELVIEW)  # Switch back to the modelview matrix
 
-
-# Driver code
+# GLUT Initialization
 glutInit()
 glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB)
 glutInitWindowSize(1200, 900)
 glutInitWindowPosition(100, 100)
 glutCreateWindow(b"Platformer")
-initialize()
-glutDisplayFunc(display)
-glutKeyboardFunc(keyboard)
-glutKeyboardUpFunc(keyboardUp)
-glutMouseFunc(mouse)
-glutTimerFunc(16, animate, 0)
+
+# Show the menu initially
+menu.show_menu()
+
+def check_menu(value=0):
+    """Checks if the menu is active and transitions to the game if needed."""
+    print(f"Checking menu - play_clicked is: {menu.play_clicked}")
+    if menu.play_clicked:
+        print("Starting game...")
+        initialize()  # Initialize game OpenGL settings
+        glutDisplayFunc(display)  # Set the game display function
+        glutKeyboardFunc(keyboard)
+        glutKeyboardUpFunc(keyboardUp)
+        glutMouseFunc(mouse)
+        glutTimerFunc(16, animate, 0)  # Start game animation loop
+        glutPostRedisplay()
+    else:
+        glutTimerFunc(16, check_menu, 0)
+
+# Start the timer to check the menu state
+glutTimerFunc(16, check_menu, 0)  # Check every 16ms
+
+# Start the main loop
 glutMainLoop()
