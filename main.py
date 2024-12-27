@@ -6,8 +6,9 @@ import time
 import midpoint_line_circle as shapes
 import assets
 import collision
-import config
+import config, end
 import level_1 as l1
+
 import menu  # Import the menu module
 from menu import diff_health
 
@@ -19,11 +20,10 @@ player_speed = 300  # Speed of the player
 player_health = 0  # Initialize player health with diff_health
 player_score = 0
 player_immune = False  # Flag to indicate if the player is immune to damage
-blinking = False  # Flag to indicate if the player model is blinking
 last_hit_time = 0  # Timestamp of the last time the player was hit
+hit_flash_duration = 0.2  # Duration for which the player flashes red when hit
 isPaused = False  # Flag to indicate if the game is paused
 isGameOver = False  # Flag to indicate if the game is over
-hit_flash_duration = 0.2  # Duration for which the player flashes red when hit
 
 velocity_y = 0  # Initial vertical velocity of the player
 isJumping = False  # Flag to indicate if the player is jumping
@@ -36,7 +36,7 @@ bullet_speed = 500  # Speed of the bullet
 bullet_size = 8  # Size of the bullet
 last_bullet_time = 0  # Timestamp of the last fired bullet
 last_fireball_time = 0  # Timestamp of the last fired fireball
-bullet_cooldown = 1  # Cooldown period in seconds
+bullet_cooldown = 0.8  # Cooldown period in seconds
 fireball_cooldown = 2  # Cooldown period in seconds
 bullets = []  # List to store active bullets as tuples (x, y, direction)
 fireballs = []  # List to store active fireballs as tuples (x, y, direction)
@@ -54,10 +54,9 @@ cannon_last_fireball_time = [0] * len(cannons)  # List to store the last firebal
 
 def updatePlayer(delta_time):
     global player_x, player_y, player_health, gravity, velocity_y, isJumping, move_left, move_right, fireballs, hit_flash_duration
-    global last_hit_time, isGameOver, invincible_time, blink_interval, last_blink_time, player_immune
-    # Apply gravity
+    global last_hit_time, isGameOver, invincible_time, blink_interval, last_blink_time, player_immune, inMud
 
-    # print(f"Starting game with player_health: {player_health}")  # Debug print
+    #mud collision
     inMud = collision.mudCollision(player_x, player_y)
     if not inMud:
         velocity_y += gravity * 2 * delta_time
@@ -81,12 +80,11 @@ def updatePlayer(delta_time):
         x, y, _ = fireball
         fireballHit = collision.fireballCollision(player_x - player_speed * delta_time, player_y, x, y)
     if enemyHit or spikeHit or fireballHit:
-        fireballHit = False
+
         cur_time = time.time()
         if cur_time - last_hit_time > 2:
             player_health -= 1
             player_immune = True
-            # print(player_health)
             print("Player Health: ", player_health)
             last_hit_time = cur_time
             if player_health == 0:
@@ -144,15 +142,36 @@ def updateBullets(delta_time):
         x, y, direction = bullet
         x += bullet_speed * delta_time if direction == "right" else -bullet_speed * delta_time  # Move the bullet
         # Check for collision with platforms and enemies
-        if not collision.bulletCollision(x, y) and not collision.enemyBulletCollision(x, y):
+
+        enemyCollision, enemy, i, hit = collision.enemyBulletCollision(x, y)
+
+        if not collision.bulletCollision(x, y) and not enemyCollision:
             if not collision.wallCollision(x, y):
                 new_bullets.append((x, y, direction))
 
-        elif collision.enemyBulletCollision(x, y):
+        if enemyCollision:
             player_score += 1
-            print(player_score)
+            
+            if enemy == "runner":
+                print(assets.runnerEnemies)
+                print(i)
+                assets.runnerEnemies.remove(i)
+
+            elif enemy == "flying":
+                print(assets.flyingEnemies)
+                assets.flyingEnemies.remove(i)
+            
+            elif enemy == "tank":
+                initx, x, y, body_size, arm_size, length, move, health = i
+                if health > 0:
+                    health -= hit
+                    assets.tankEnemies[assets.tankEnemies.index(i)] = (initx, x, y, body_size, arm_size, length, move, health)
+                elif health == 0:
+                    assets.tankEnemies.remove(i)
+        
 
     bullets = new_bullets
+   
    
 
 def shootFireball():
@@ -194,6 +213,7 @@ def updateFireballs(delta_time):
 
 def keyboard(key, x, y):
     global player_x, player_y, velocity_y, isJumping, move_left, move_right, gun_side, isPaused, last_time
+
     if key == b'a' or key == b'A':
         move_left = True
         gun_side = "left"
@@ -203,6 +223,10 @@ def keyboard(key, x, y):
     elif key == b' ' and not isJumping:
         velocity_y = jump_strength
         isJumping = True
+    elif key == b'q' or key == b'Q':
+        isPaused = not isPaused
+        print("Game Paused") if isPaused else print("Game Resumed")
+        last_time = time.time()
     elif key == b'q' or key == b'Q':
         isPaused = not isPaused
         print("Game Paused") if isPaused else print("Game Resumed")
@@ -230,10 +254,13 @@ def mouse(button, state, x, y):
             last_bullet_time = current_time
 
 
+
 def display():
     global gun_side, player_x, player_y, platforms
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # Clear the screen
     glLoadIdentity()  # Reset the transformation matrix
+    # shapes.MidpointLine(-800, -600, 800, -600)
+    # shapes.MidpointLine(-800, 700, 800, 700)
     
     if config.level == 1:
         l1.drawGround_l1()
@@ -245,6 +272,9 @@ def display():
         l1.drawMud_l1()
         l1.drawExitDoor_l1()
         l1.drawCeiling_l1()
+        l1.drawEnemy_l1()
+        
+    
     
     # Handle blinking effect
     if not player_immune:
@@ -252,7 +282,7 @@ def display():
     else:
         assets.player(player_x, player_y, gun_side, 1, (1, 0, 0))
     
-    assets.runnerEnemy()
+    assets.drawHealth_Score(player_health, player_score)
     
     for bullet in bullets:
         x, y, _ = bullet
@@ -269,7 +299,8 @@ def animate(value):
     global last_time, isGameOver, isPaused, player_score
     if isGameOver:
         print(f"Game Over! Your score is {player_score}")
-        glutLeaveMainLoop()
+        end.show_end_screen(player_score)  # Show the end screen
+        
         return
     if not isGameOver and not isPaused:
         current_time = time.time()
@@ -279,12 +310,15 @@ def animate(value):
         updateBullets(delta_time)
         shootFireball()
         updateFireballs(delta_time)
-        assets.moveRunnerEnemies(delta_time, isPaused)
+        if config.level == 1:
+            assets.moveRunnerEnemies(delta_time, isPaused)
+            assets.moveFlyingEnemies(delta_time, isPaused)
+
+            assets.moveTankEnemies(delta_time, isPaused)
 
     glutPostRedisplay()
     glutTimerFunc(16, animate, 0)
     
-
 
 def initialize():
     """Initialize OpenGL settings for the game."""
