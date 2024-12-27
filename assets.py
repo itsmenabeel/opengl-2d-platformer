@@ -2,20 +2,12 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 import midpoint_line_circle as shapes
-import collision
+import config
+import level_1 as l1
 import random, math
 
-
-isBreaking = False  # Flag to indicate if the brittle platform is breaking
-platforms = [
-    (-800, 700, 800, 700, 2, False, False, False),
-    (-790, -200, 300, 5, False, False, False),
-    (150, 50, 500, 5, True, False, False),
-    (80, 225, 300, 5, False, False, False),
-    (150, -280, 400, 5, False, False, False),
-    (-150, 350, 700, 5, False, False, False),
-]  # List of platforms as tuples (x1, y1, length, width, isBrittle, isMoving, hasEnemy)
-
+if config.level == 1:
+    platforms = config.platform1
 
 def exitDoor(center_x, center_y):
     shapes.MidpointCircle(center_x, center_y, 20, [0,1,2,3])
@@ -26,18 +18,46 @@ def exitDoor(center_x, center_y):
 def normalPlatform(x1, y1, length, size = 10):
     shapes.MidpointLine(x1, y1, x1 + length, y1, size)
 
-def brittlePlatform(x1, y1, length, size = 10, isBreaking = False):
-    if isBreaking:
-        shapes.MidpointLine(x1, y1, x1 + length, y1, size, (1, 1, 1))
-    shapes.MidpointLine(x1, y1, x1 + length, y1, size, (0.77, 0.65, 0.52))
+def wall(x1, y1, height = 20, width = 15, size = 5):
+    shapes.MidpointLine(x1, y1, x1, y1 + height, size)
+    shapes.MidpointLine(x1, y1 + height, x1 + width, y1 + height, size)
+    shapes.MidpointLine(x1 + width, y1 + height, x1 + width, y1, size)
+    shapes.MidpointLine(x1 + width, y1, x1, y1, size)
+    
+def cannon(center_x, center_y, radius = 8, size = 1, color = (1, 0.5, 0)):
+    shapes.MidpointCircle(center_x, center_y, radius, [3,4], size, color)
+    shapes.MidpointLine(center_x - 30, center_y - 30, center_x - 8, (center_y - 8), size, color)
+    shapes.MidpointLine(center_x - 30, center_y + 30, center_x - 8, (center_y + 8), size, color)
+    
+def spike(x1, y1, size = 1):
+    shapes.MidpointLine(x1, y1, x1 + 10, y1, size)
+    shapes.MidpointLine(x1, y1, x1 + 5, y1 + 20, size)
+    shapes.MidpointLine(x1 + 10, y1, x1 + 5, y1 + 20, size)
+    
+    shapes.MidpointLine(x1 + 10, y1, x1 + 20, y1, size)
+    shapes.MidpointLine(x1 + 10, y1, x1 + 15, y1 + 20, size)
+    shapes.MidpointLine(x1 + 20, y1, x1 + 15, y1 + 20, size)
+    
+    shapes.MidpointLine(x1 + 20, y1, x1 + 30, y1, size)
+    shapes.MidpointLine(x1 + 20, y1, x1 + 25, y1 + 20, size)
+    shapes.MidpointLine(x1 + 30, y1, x1 + 25, y1 + 20, size)
+    
+    shapes.MidpointLine(x1 + 30, y1, x1 + 40, y1, size)
+    shapes.MidpointLine(x1 + 30, y1, x1 + 35, y1 + 20, size)
+    shapes.MidpointLine(x1 + 40, y1, x1 + 35, y1 + 20, size)
 
-def player(x, y, gun_side):
-    shapes.MidpointCircle(x, y, 8) # head
-    shapes.MidpointLine(x - 12, y - 12, x + 12, y - 12) # body top line
-    shapes.MidpointLine(x - 12, y - 12, x, y - 30) # body left line
-    shapes.MidpointLine(x + 12, y - 12, x, y - 30) # body right line
-    shapes.MidpointCircle(x - 10, y - 35, 4) # left leg
-    shapes.MidpointCircle(x + 9, y - 35, 4) # right leg
+def mud(x1, y1, size = 8):
+    shapes.MidpointCircle(x1 + 10, y1, 10, [0,1,2,3], size, (0.77, 0.64, 0.52))
+    shapes.MidpointCircle(x1 + 20, y1, 10, [0,1,2,3], size, (0.5, 0.3, 0))
+    shapes.MidpointCircle(x1 + 30, y1, 10, [0,1,2,3], size, (0.5, 0.3, 0))    
+
+def player(x, y, gun_side, size = 1, color = (1, 1, 1)):
+    shapes.MidpointCircle(x, y, 8, [0,1,2,3,4,5,6,7], size, color) # head
+    shapes.MidpointLine(x - 12, y - 12, x + 12, y - 12, size, color) # body top line
+    shapes.MidpointLine(x - 12, y - 12, x, y - 30, size, color) # body left line
+    shapes.MidpointLine(x + 12, y - 12, x, y - 30, size, color) # body right line
+    shapes.MidpointCircle(x - 10, y - 35, 4, [0,1,2,3,4,5,6,7], size, color) # left leg
+    shapes.MidpointCircle(x + 9, y - 35, 4, [0,1,2,3,4,5,6,7], size, color) # right leg
     
     # Draw the gun
     gun_x = x - 20 if gun_side == "left" else x + 20
@@ -45,18 +65,24 @@ def player(x, y, gun_side):
     shapes.MidpointCircle(gun_x, gun_y, 6)  # Gun is a small circle
 
 
+def drawHeartPickup(x, y, size = 2, color = (1, 0.56, 0.63)):  # x, y are the coordinates of the top middle point of the heart
+    shapes.MidpointCircle(x - 10, y, 10, [0,1,2,3], size, color)
+    shapes.MidpointCircle(x + 10, y, 10, [0,1,2,3], size, color)
+    shapes.MidpointLine(x + 20, y, x, y - 20, size, color)
+    shapes.MidpointLine(x - 20, y, x, y - 20, size, color)
 
 
 runnerEnemies = []
 for i in platforms:
     if random.choice(["do", "continue"]) == "continue":
         continue
-
+    print(i)
     x, y, length, width, isBrittle, isMoving, hasEnemy = i
 
     if not hasEnemy and length <= 400:
         runnerEnemies.append((x, x + 10 , y + 50 , length, 5))
         platforms[platforms.index(i)] = (x, y, length, width, isBrittle, isMoving, True)
+
 
 def runnerEnemy():
 
@@ -77,21 +103,22 @@ def runnerEnemy():
 # runnerEnemy moves left to right
 
 
-def moveRunnerEnemies(dt):
-    global runnerEnemies
-    for i in range(len(runnerEnemies)):
-        initx, x, y, bound, move = runnerEnemies[i]
-        
+def moveRunnerEnemies(dt, isPaused):
+    global runnerEnemies, enemyMove
+    if not isPaused:
+        for i in range(len(runnerEnemies)):
+            initx, x, y, bound, move = runnerEnemies[i]
+            
 
-        if x <= initx:
-            move = -1 * move  # move to the left
-               # move to the right
-        elif x+20 >= initx+bound:  # assuming the screen width is 800
-            move = -1 * move  # move to the left
-        
-        x += move * dt * 20
-        
-        runnerEnemies[i] = (initx, x, y, bound, move)
+            if x <= initx:
+                move = abs(move)  # move to the left
+                # move to the right
+            elif x+20 >= initx+bound:  # assuming the screen width is 800
+                move = -abs(move)  # move to the left
+            
+            x += move * dt * 20
+            
+            runnerEnemies[i] = (initx, x, y, bound, move)
 
 
 
@@ -112,18 +139,18 @@ def flyingEnemy():
         shapes.MidpointLine(x - 20, y - 5, x - 20, y + 5) # left propeller axis
         shapes.MidpointLine(x + 20, y - 5, x + 20, y + 5) # right propeller axis
 
-def moveFlyingEnemies(dt):
+def moveFlyingEnemies(dt, isPaused):
     global flyingEnemies
-
-    for i in range(len(flyingEnemies)):
-        initx, x, y, move = flyingEnemies[i]
-        if x-20 <= -740:
-            move = -1 * move
-        elif x+20 >= 740:
-            move = -1 * move
-        x += move * dt * 250
-
-        flyingEnemies[i] = (initx, x, y, move)
+    if not isPaused:
+        for i in range(len(flyingEnemies)):
+            initx, x, y, move = flyingEnemies[i]
+            if x-20 <= -740:
+                move = -1 * move
+            elif x+20 >= 740:
+                move = -1 * move
+            x += move * dt * 250
+            x = int(x)
+            flyingEnemies[i] = (initx, x, y, move)
 
 
 tankEnemies = []
@@ -168,46 +195,24 @@ def tankEnemy():
             shapes.MidpointCircle(x - body_size - arm_size, y, 15)
 
 
-def moveTankEnemies(dt):
+def moveTankEnemies(dt, isPaused):
     global tankEnemies
+    if not isPaused:
+        for i in range(len(tankEnemies)):
+            initx, x, y, body_size, arm_size, length, move, health = tankEnemies[i]
+            if x - body_size  <= initx:
+                move = -1 * move
+            elif x + body_size + arm_size + 20 >= initx + length:
+                move = -1 * move
+            x += move * dt * 30
+            x = int(x)
+            tankEnemies[i] = (initx, x, y, body_size, arm_size, length, move, health)
 
-    for i in range(len(tankEnemies)):
-        initx, x, y, body_size, arm_size, length, move, health = tankEnemies[i]
-        if x - body_size  <= initx:
-            move = -1 * move
-        elif x + body_size + arm_size + 20 >= initx + length:
-            move = -1 * move
-        x += move * dt * 30
-
-        tankEnemies[i] = (initx, x, y, body_size, arm_size, length, move, health)
 
 
+def drawHealth_Score(health, score):
+    x, y = -750, 750
 
-# def rotateTankEnemy(angle):
-#     # Define the position and size of the tank
-#     x, y = 0, -200  # You can adjust these values to position the tank
-#     body_size = 50
-#     turret_size = 
-# 20
-#     cannon_size = 30
-
-#     # Calculate the new positions of the tank's parts based on the rotation angle
-#     turret_x = x + math.cos(math.radians(angle)) * turret_size
-#     turret_y = y + math.sin(math.radians(angle)) * turret_size
-#     cannon_x = turret_x + math.cos(math.radians(angle)) * cannon_size
-#     cannon_y = turret_y + math.sin(math.radians(angle)) * cannon_size
-
-#     # Draw the tank's body
-#     shapes.MidpointCircle(x, y, body_size)
-
-#     # Draw the turret
-#     shapes.MidpointCircle(turret_x, turret_y, 10)
-
-#     # Draw the cannon
-#     shapes.MidpointLine(turret_x, turret_y, cannon_x, cannon_y)
-#     shapes.MidpointCircle(cannon_x, cannon_y, 5)
-
-def drawHealth_Score(x, y, health, score):
     space = 0
     for i in range(health):
         shapes.MidpointCircle(x-10 + space, y, 8, [0, 1, 2, 3], 2, [1, 0, 0])
@@ -223,3 +228,61 @@ def drawHealth_Score(x, y, health, score):
     glRasterPos2f(600, 730)
     for char in "SCORE: " + str(score):
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ord(char))
+
+
+
+
+
+
+
+#Atik 
+
+
+movingPlatforms = []
+
+def initializeMovingPlatforms(platform_list):
+    """Initialize moving platforms from a list of tuples."""
+    global movingPlatforms
+    for platform in platform_list:
+        x, y, length, width, isBrittle, isMoving = platform
+        if isMoving:  # Only include moving platforms
+            movingPlatforms.append({
+                'init_x': x,       # Initial x-coordinate
+                'x': x,            # Current x-coordinate
+                'y': y,            # Current y-coordinate
+                'length': length,  # Platform length
+                'width': width,    # Platform width
+                'bound': 500,      # Example movement boundary
+                'speed': 2         # Example movement speed
+            })
+
+def movePlatforms(dt):
+    """Update the positions of moving platforms."""
+    global movingPlatforms
+    for platform in movingPlatforms:
+        init_x, x, y, length, bound, speed = (
+            platform['init_x'],
+            platform['x'],
+            platform['y'],
+            platform['length'],
+            platform['bound'],
+            platform['speed'],
+        )
+
+        # Reverse direction at the boundaries
+        if x <= init_x:
+            speed = abs(speed)  # Move to the right
+        elif x + length >= init_x + bound:
+            speed = -abs(speed)  # Move to the left
+
+        # Update position
+        x += speed * dt
+        platform['x'] = x
+        platform['speed'] = speed
+        
+def drawMovingPlatforms():
+    """Draw all moving platforms."""
+    global movingPlatforms
+    for platform in movingPlatforms:
+        x, y, length = platform['x'], platform['y'], platform['length']
+        shapes.MidpointLine(x, y, x + length, y, 10, (0.2, 0.8, 0.8))  # Light blue for moving platforms
