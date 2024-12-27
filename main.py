@@ -9,16 +9,12 @@ import collision
 import config
 import level_1 as l1
 import menu  # Import the menu module
-from menu import diff_health  # Import the diff_health variable from the menu module
-import end  # Import the end module
-import os
+from menu import diff_health
 # global variables
 player_x = -500  # Initial x-coordinate of the player's head
 player_y = -540  # Initial y-coordinate of the player's head
-gravity = -300  # Acceleration due to gravity
+gravity = -500  # Acceleration due to gravity
 player_speed = 300  # Speed of the player
-#player_health = diff_health
-#print(f"Starting game with player_health: {player_health}")  # Debug print
 player_health = 0  # Initialize player health with diff_health
 player_score = 0
 player_immune = False  # Flag to indicate if the player is immune to damage
@@ -26,6 +22,7 @@ blinking = False  # Flag to indicate if the player model is blinking
 last_hit_time = 0  # Timestamp of the last time the player was hit
 isPaused = False  # Flag to indicate if the game is paused
 isGameOver = False  # Flag to indicate if the game is over
+hit_flash_duration = 0.2  # Duration for which the player flashes red when hit
 
 velocity_y = 0  # Initial vertical velocity of the player
 isJumping = False  # Flag to indicate if the player is jumping
@@ -42,9 +39,6 @@ bullet_cooldown = 1  # Cooldown period in seconds
 fireball_cooldown = 2  # Cooldown period in seconds
 bullets = []  # List to store active bullets as tuples (x, y, direction)
 fireballs = []  # List to store active fireballs as tuples (x, y, direction)
-invincible_time = 0  # Time remaining for invincibility
-blink_interval = 0.1  # Interval for blinking effect
-last_blink_time = 0  # Timestamp of the last blink
 
 if config.level == 1:
     platforms = l1.platforms  # List of platforms as tuples (x1, y1, length, width)
@@ -52,19 +46,27 @@ if config.level == 1:
     walls = l1.walls  # List of walls as tuples (x1, y1, height, width)
     spikes = l1.spikes  # List of spikes as tuples (x1, y1)
     cannons = l1.cannons  # List of cannons as tuples (x, y)
+    muds = l1.muds  # List of mud as tuples (x, y)
+    
+cannon_last_fireball_time = [0] * len(cannons)  # List to store the last fireball time for each cannon
 
 
 def updatePlayer(delta_time):
-    global player_x, player_y, player_health, gravity, velocity_y, isJumping, move_left, move_right, fireballs
-    global last_hit_time, isGameOver, invincible_time, blink_interval, last_blink_time, player_immune, blinking
+    global player_x, player_y, player_health, gravity, velocity_y, isJumping, move_left, move_right, fireballs, hit_flash_duration
+    global last_hit_time, isGameOver, invincible_time, blink_interval, last_blink_time, player_immune
     # Apply gravity
 
-    print(f"Starting game with player_health: {player_health}")  # Debug print
-    velocity_y += gravity * 2 * delta_time
-    new_y = player_y + int(velocity_y * 2 * delta_time)
+    # print(f"Starting game with player_health: {player_health}")  # Debug print
+    inMud = collision.mudCollision(player_x, player_y)
+    if not inMud:
+        velocity_y += gravity * 2 * delta_time
+        new_y = player_y + int(velocity_y * 2 * delta_time)
+    else:
+        velocity_y += (gravity * delta_time) / 2
+        new_y = player_y + int((velocity_y * delta_time) / 2)
 
     # Detect collisions
-    if collision.platformCollision(player_x, new_y) or collision.wallCollision(player_x, new_y):
+    if collision.platformCollision(player_x, new_y) or collision.wallCollision(player_x, new_y) or collision.ceilingCollision(player_x, new_y):
         velocity_y = 0
         isJumping = False
     else:
@@ -83,7 +85,7 @@ def updatePlayer(delta_time):
         if cur_time - last_hit_time > 2:
             player_health -= 1
             player_immune = True
-            print(player_health)
+            # print(player_health)
             print("Player Health: ", player_health)
             last_hit_time = cur_time
             if player_health == 0:
@@ -99,7 +101,7 @@ def updatePlayer(delta_time):
     collided_heart, index = collision.heartPickupCollision(player_x, player_y)
     if collided_heart:
         player_health += 1
-        print(player_health)
+        print("Player Health: ", player_health)
         if index is not None:
             pickups.remove(pickups[index])
     
@@ -108,12 +110,18 @@ def updatePlayer(delta_time):
         horz_collision_plat = collision.platformCollision(player_x - player_speed * delta_time, player_y)
         horz_collision_wall = collision.wallCollision(player_x - player_speed * delta_time, player_y)
         if not horz_collision_plat and not horz_collision_wall:
-            player_x -= player_speed * delta_time if player_x - 12 > -800 else 0   
+            if not inMud:
+                player_x -= player_speed * delta_time if player_x - 12 > -800 else 0
+            else:
+                player_x -= (player_speed / 2) * delta_time if player_x - 12 > -800 else 0 
     if move_right:
         horz_collision_plat = collision.platformCollision(player_x + player_speed * delta_time, player_y)
         horz_collision_wall = collision.wallCollision(player_x + player_speed * delta_time, player_y)
         if not horz_collision_plat and not horz_collision_wall:
-            player_x += player_speed * delta_time if player_x + 12 < 800 else 0
+            if not inMud:
+                player_x += player_speed * delta_time if player_x + 12 < 800 else 0
+            else:
+                player_x += (player_speed / 2) * delta_time if player_x + 12 < 800 else 0
     
 
     # Keep player within screen bounds
@@ -121,6 +129,14 @@ def updatePlayer(delta_time):
         player_y = -557
         velocity_y = 0
         isJumping = False
+        
+    # Reset player color after hit flash duration
+    if player_immune and (time.time() - last_hit_time > hit_flash_duration):
+        player_immune = False
+        
+    if collision.exitDoorCollision(player_x, player_y):
+        print("Level Complete! Going to next level...")
+        # config.level += 1
       
         
 def updateBullets(delta_time):
@@ -143,19 +159,19 @@ def updateBullets(delta_time):
    
 
 def shootFireball():
-    global cannons, fireballs, last_fireball_time, fireball_cooldown
-    for fireball in cannons:
-        current_time = time.time()
-        x, y = fireball
-        if current_time - last_fireball_time >= fireball_cooldown:
-            # Add a new bullet at the cannon's tip
-            bullet_x = x
-            bullet_y = y
+    global cannons, fireballs, last_fireball_time, fireball_cooldown, cannon_last_fireball_time
+    current_time = time.time()
+    for i, cannon in enumerate(cannons):
+        x, y = cannon
+        if current_time - cannon_last_fireball_time[i] >= fireball_cooldown:
+            # Add a new fireball at the cannon's tip
+            fireball_x = x
+            fireball_y = y
             if x < 0:
-                fireballs.append((bullet_x, bullet_y, "right"))
+                fireballs.append((fireball_x, fireball_y, "right"))
             elif x > 0:
-                fireballs.append((bullet_x, bullet_y, "left"))
-            last_fireball_time = current_time
+                fireballs.append((fireball_x, fireball_y, "left"))
+            cannon_last_fireball_time[i] = current_time
         
 
 
@@ -221,16 +237,17 @@ def display():
     global gun_side, player_x, player_y, platforms
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # Clear the screen
     glLoadIdentity()  # Reset the transformation matrix
-    shapes.MidpointLine(-800, -600, 800, -600)
     
     if config.level == 1:
+        l1.drawGround_l1()
         l1.drawPlatforms_l1()
         l1.drawPickups_l1()
         l1.drawWalls_l1()
         l1.drawSpikes_l1()
         l1.drawCannons_l1()
-        
-    assets.exitDoor(-200, 500)
+        l1.drawMud_l1()
+        l1.drawExitDoor_l1()
+        l1.drawCeiling_l1()
     
     # Handle blinking effect
     if not player_immune:
@@ -294,7 +311,7 @@ menu.show_menu()
 def check_menu(value=0):
     global player_health
     """Checks if the menu is active and transitions to the game if needed."""
-    print(f"Checking menu - play_clicked is: {menu.play_clicked}")
+    # print(f"Checking menu - play_clicked is: {menu.play_clicked}")
     if menu.play_clicked:
         print("Starting game...")
         player_health = menu.diff_health

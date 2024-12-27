@@ -23,9 +23,14 @@ def wall(x1, y1, height = 20, width = 15, size = 5):
     shapes.MidpointLine(x1 + width, y1, x1, y1, size)
     
 def cannon(center_x, center_y, radius = 8, size = 1, color = (1, 0.5, 0)):
-    shapes.MidpointCircle(center_x, center_y, radius, [3,4], size, color)
-    shapes.MidpointLine(center_x - 30, center_y - 30, center_x - 8, (center_y - 8), size, color)
-    shapes.MidpointLine(center_x - 30, center_y + 30, center_x - 8, (center_y + 8), size, color)
+    if center_x < 0:
+        shapes.MidpointCircle(center_x, center_y, radius, [3,4], size, color)
+        shapes.MidpointLine(center_x - 30, center_y - 30, center_x - 8, (center_y - 8), size, color)
+        shapes.MidpointLine(center_x - 30, center_y + 30, center_x - 8, (center_y + 8), size, color)
+    else:
+        shapes.MidpointCircle(center_x, center_y, radius, [0,7], size, color)
+        shapes.MidpointLine(center_x + 30, center_y - 30, center_x + 8, (center_y - 8), size, color)
+        shapes.MidpointLine(center_x + 30, center_y + 30, center_x + 8, (center_y + 8), size, color)
     
 def spike(x1, y1, size = 1):
     shapes.MidpointLine(x1, y1, x1 + 10, y1, size)
@@ -43,6 +48,12 @@ def spike(x1, y1, size = 1):
     shapes.MidpointLine(x1 + 30, y1, x1 + 40, y1, size)
     shapes.MidpointLine(x1 + 30, y1, x1 + 35, y1 + 20, size)
     shapes.MidpointLine(x1 + 40, y1, x1 + 35, y1 + 20, size)
+    
+
+def mud(x1, y1, size = 8):
+    shapes.MidpointCircle(x1 + 10, y1, 10, [0,1,2,3], size, (0.77, 0.64, 0.52))
+    shapes.MidpointCircle(x1 + 20, y1, 10, [0,1,2,3], size, (0.5, 0.3, 0))
+    shapes.MidpointCircle(x1 + 30, y1, 10, [0,1,2,3], size, (0.5, 0.3, 0))
     
 
 def player(x, y, gun_side, size = 1, color = (1, 1, 1)):
