@@ -72,54 +72,5 @@ def moveRunnerEnemies(dt):
 
 
 
-#Atik 
 
 
-movingPlatforms = []
-
-def initializeMovingPlatforms(platform_list):
-    """Initialize moving platforms from a list of tuples."""
-    global movingPlatforms
-    for platform in platform_list:
-        x, y, length, width, isBrittle, isMoving = platform
-        if isMoving:  # Only include moving platforms
-            movingPlatforms.append({
-                'init_x': x,       # Initial x-coordinate
-                'x': x,            # Current x-coordinate
-                'y': y,            # Current y-coordinate
-                'length': length,  # Platform length
-                'width': width,    # Platform width
-                'bound': 500,      # Example movement boundary
-                'speed': 2         # Example movement speed
-            })
-
-def movePlatforms(dt):
-    """Update the positions of moving platforms."""
-    global movingPlatforms
-    for platform in movingPlatforms:
-        init_x, x, y, length, bound, speed = (
-            platform['init_x'],
-            platform['x'],
-            platform['y'],
-            platform['length'],
-            platform['bound'],
-            platform['speed'],
-        )
-
-        # Reverse direction at the boundaries
-        if x <= init_x:
-            speed = abs(speed)  # Move to the right
-        elif x + length >= init_x + bound:
-            speed = -abs(speed)  # Move to the left
-
-        # Update position
-        x += speed * dt
-        platform['x'] = x
-        platform['speed'] = speed
-        
-def drawMovingPlatforms():
-    """Draw all moving platforms."""
-    global movingPlatforms
-    for platform in movingPlatforms:
-        x, y, length = platform['x'], platform['y'], platform['length']
-        shapes.MidpointLine(x, y, x + length, y, 10, (0.2, 0.8, 0.8))  # Light blue for moving platforms
