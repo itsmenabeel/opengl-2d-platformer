@@ -7,25 +7,34 @@ import midpoint_line_circle as shapes
 import assets
 
 platforms = [
-    (-790, -200, 300, 5, False, False),
+    (-790, -300, 300, 5, False, False),
     (150, 50, 400, 5, True, False),
     (80, 225, 300, 5, False, False),
-    (150, -280, 250, 5, False, False),
+    (100, -280, 250, 5, False, False),
     (-300, 450, 200, 5, False, False),
 ]  # List of platforms as tuples (x1, y1, length, width, isBrittle, isMoving)
 pickups = [
     (500, 500)
 ]  # List of pickups as tuples (x, y, size, color)
 walls = [
-    (-200, -600, 50, 100),
+    (-200, -600, 50, 180),
     (-300, -600, 50, 120)
 ]  # List of walls as tuples (x1, y1, height, width)
 spikes = [
-    (-245, -600)
+    (-245, -600),  # 40 pixel across
+    (60, -600),
+    (20, -600)
 ]  # List of spikes as tuples (x1, y1)
 cannons = [
-    (-770, 500)
+    (-770, 500),
+    (-770, 300),
+    (770, 100)
 ]
+muds = [
+    (500, -600),
+    (540, -600)
+]
+exitDoor = (-200, 500)
 
 def drawPlatforms_l1():
     for platform in platforms:
@@ -51,3 +60,12 @@ def drawCannons_l1():
     for cannon in cannons:
         x, y = cannon
         assets.cannon(x, y)
+        
+def drawMud_l1():
+    for mud in muds:
+        x, y = mud
+        assets.mud(x, y)
+        
+def drawExitDoor_l1():
+    x, y = exitDoor
+    assets.exitDoor(x, y)

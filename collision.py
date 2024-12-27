@@ -18,6 +18,8 @@ if config.level == 1:
     pickups = l1.pickups  # List of pickups as tuples (x, y, size, color)
     walls = l1.walls  # List of walls as tuples (x1, y1, height, width)
     spikes = l1.spikes  # List of spikes as tuples (x1, y1)
+    muds = l1.muds  # List of muds as tuples (x1, y1)
+    exitDoor = l1.exitDoor  # Tuple of exit door as (x, y)
 
 
 def platformCollision(player_x, player_y):
@@ -128,6 +130,41 @@ def spikeCollision(player_x, player_y):
     return False
 
 
+def mudCollision(player_x, player_y):
+    global muds
+    player_left = player_x - 12
+    player_right = player_x + 12
+    player_top = player_y + 8
+    player_bottom = player_y - 39 
+
+    for mud in muds:
+        x1, y1 = mud
+        x2 = x1 + 40
+        y2 = y1 + 10
+
+        # Check for collisions with the top edge
+        if (player_bottom <= y1 <= player_top and
+                player_right > x1 and player_left < x2):
+            return True
+
+        # Check for collisions with the bottom edge
+        if (player_bottom <= y2 <= player_top and
+                player_right > x1 and player_left < x2):
+            return True
+
+        # Check for collisions with the left edge
+        if (player_left <= x1 <= player_right and
+                player_bottom < y2 and player_top > y1):
+            return True
+
+        # Check for collisions with the right edge
+        if (player_left <= x2 <= player_right and
+                player_bottom < y2 and player_top > y1):
+            return True
+    
+    return False
+
+
 def enemyCollision(player_x, player_y):
     player_left = player_x - 12
     player_right = player_x + 12
@@ -206,7 +243,39 @@ def enemyBulletCollision(bullet_x, bullet_y):
 
 
 def exitDoorCollision(player_x, player_y):
-    pass
+    # Define the player's bounding box
+    global exitDoor
+    player_left = player_x - 12
+    player_right = player_x + 12
+    player_top = player_y + 8
+    player_bottom = player_y - 39 
+
+    x1, y1 = exitDoor
+    x1, y1 = x1 - 15, y1 - 35
+    x2 = x1 + 15
+    y2 = y1 + 55
+
+    # Check for collisions with the top edge
+    if (player_bottom <= y1 <= player_top and
+            player_right > x1 and player_left < x2):
+        return True
+
+    # Check for collisions with the bottom edge
+    if (player_bottom <= y2 <= player_top and
+            player_right > x1 and player_left < x2):
+        return True
+
+    # Check for collisions with the left edge
+    if (player_left <= x1 <= player_right and
+            player_bottom < y2 and player_top > y1):
+        return True
+
+    # Check for collisions with the right edge
+    if (player_left <= x2 <= player_right and
+            player_bottom < y2 and player_top > y1):
+        return True
+
+    return False
 
 
 def heartPickupCollision(player_x, player_y):

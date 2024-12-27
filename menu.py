@@ -97,30 +97,30 @@ def menu_mouse(button, state, x, y):
         ogl_y = (window_height/2 - y) * (1600.0 / window_height)
         
         if -200 <= ogl_x <= 200 and 50 <= ogl_y <= 150:
-            print("Play clicked - setting flag to True")  # Debug print
+            # print("Play clicked - setting flag to True")  # Debug print
             play_clicked = True
             menu_active = False
-            print(f"play_clicked is now: {play_clicked}")  # Debug print
+            # print(f"play_clicked is now: {play_clicked}")  # Debug print
             
         elif -200 <= ogl_x <= 200 and -150 <= ogl_y <= -50:
             os._exit(0)
         
         elif -200 <= ogl_x <= 200 and -350 <= ogl_y <= -250:
-            print("Easy clicked - setting difficulty to Easy")  # Debug print
+            # print("Easy clicked - setting difficulty to Easy")  # Debug print
             easy_stage = True
             hard_stage = False
             diff_health = 5
             selected_mode = "Easy Mode Selected"
-            print(f"diff_health set to: {diff_health}")  # Debug print
+            # print(f"diff_health set to: {diff_health}")  # Debug print
             glutPostRedisplay() # Request a redraw to update the display
             
         elif -200 <= ogl_x <= 200 and -450 <= ogl_y <= -350:
-            print("Hard clicked - setting difficulty to Hard")  # Debug print
+            # print("Hard clicked - setting difficulty to Hard")  # Debug print
             easy_stage = False
             hard_stage = True
             diff_health = 3
             selected_mode = "Hard Mode Selected"
-            print(f"diff_health set to: {diff_health}")  # Debug print
+            # print(f"diff_health set to: {diff_health}")  # Debug print
             glutPostRedisplay()  # Request a redraw to update the display
 def show_menu():
     """Displays the menu."""
