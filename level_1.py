@@ -35,6 +35,8 @@ muds = [
     (540, -600)
 ]
 exitDoor = (-200, 500)
+ground = (-800, -600, 800, -600)
+ceiling = (-800, 700, 800, 700)
 
 def drawPlatforms_l1():
     for platform in platforms:
@@ -69,3 +71,11 @@ def drawMud_l1():
 def drawExitDoor_l1():
     x, y = exitDoor
     assets.exitDoor(x, y)
+
+def drawGround_l1():
+    x1, y1, x2, y2 = ground
+    shapes.MidpointLine(x1, y1, x2, y2)
+    
+def drawCeiling_l1():
+    x1, y1, x2, y2 = ceiling
+    shapes.MidpointLine(x1, y1, x2, y2)

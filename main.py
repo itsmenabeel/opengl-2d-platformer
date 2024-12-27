@@ -67,7 +67,7 @@ def updatePlayer(delta_time):
         new_y = player_y + int((velocity_y * delta_time) / 2)
 
     # Detect collisions
-    if collision.platformCollision(player_x, new_y) or collision.wallCollision(player_x, new_y):
+    if collision.platformCollision(player_x, new_y) or collision.wallCollision(player_x, new_y) or collision.ceilingCollision(player_x, new_y):
         velocity_y = 0
         isJumping = False
     else:
@@ -234,9 +234,9 @@ def display():
     global gun_side, player_x, player_y, platforms
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # Clear the screen
     glLoadIdentity()  # Reset the transformation matrix
-    shapes.MidpointLine(-800, -600, 800, -600)
     
     if config.level == 1:
+        l1.drawGround_l1()
         l1.drawPlatforms_l1()
         l1.drawPickups_l1()
         l1.drawWalls_l1()
@@ -244,6 +244,7 @@ def display():
         l1.drawCannons_l1()
         l1.drawMud_l1()
         l1.drawExitDoor_l1()
+        l1.drawCeiling_l1()
     
     # Handle blinking effect
     if not player_immune:

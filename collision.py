@@ -20,6 +20,7 @@ if config.level == 1:
     spikes = l1.spikes  # List of spikes as tuples (x1, y1)
     muds = l1.muds  # List of muds as tuples (x1, y1)
     exitDoor = l1.exitDoor  # Tuple of exit door as (x, y)
+    ceiling = l1.ceiling  # Tuple of ceiling as (x1, y1, x2, y2)
 
 
 def platformCollision(player_x, player_y):
@@ -90,6 +91,40 @@ def wallCollision(player_x, player_y):
         if (player_left <= x2 <= player_right and
                 player_bottom < y2 and player_top > y1):
             return True
+    
+    return False
+
+
+def ceilingCollision(player_x, player_y):
+    global ceiling
+    player_left = player_x - 12
+    player_right = player_x + 12
+    player_top = player_y + 8
+    player_bottom = player_y - 39 
+
+    x1, y1, _, _ = ceiling
+    x2 = x1 + 1600
+    y2 = y1 + 3
+
+    # Check for collisions with the top edge
+    if (player_bottom <= y1 <= player_top and
+            player_right > x1 and player_left < x2):
+        return True
+
+    # Check for collisions with the bottom edge
+    if (player_bottom <= y2 <= player_top and
+            player_right > x1 and player_left < x2):
+        return True
+
+    # Check for collisions with the left edge
+    if (player_left <= x1 <= player_right and
+            player_bottom < y2 and player_top > y1):
+        return True
+
+    # Check for collisions with the right edge
+    if (player_left <= x2 <= player_right and
+            player_bottom < y2 and player_top > y1):
+        return True
     
     return False
 
