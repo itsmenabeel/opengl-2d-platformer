@@ -29,7 +29,7 @@ bullet_size = 8  # Size of the bullet
 last_bullet_time = 0  # Timestamp of the last fired bullet
 bullet_cooldown = 1  # Cooldown period in seconds
 bullets = []  # List to store active bullets as tuples (x, y, direction)
-platforms = collision.platforms  # List of platforms as tuples (x1, y1, length, width)
+platforms = assets.platforms  # List of platforms as tuples (x1, y1, length, width)
 
 
 def updatePlayer(delta_time):
@@ -57,16 +57,17 @@ def updatePlayer(delta_time):
         if cur_time - last_hit_time > 1:
             player_health -= 1
             player_x += 10
-            print(player_health)
+            
             last_hit_time = cur_time
     
 
     # Keep player within screen bounds
-    if player_y < -557:
+    if player_y < -557 :
         player_y = -557
         velocity_y = 0
         isJumping = False
-      
+    
+
         
 def updateBullets(delta_time):
     global bullets, player_score
@@ -76,16 +77,38 @@ def updateBullets(delta_time):
         x, y, direction = bullet
         x += bullet_speed * delta_time if direction == "right" else -bullet_speed * delta_time  # Move the bullet
         # Check for collision with platforms
-        if not collision.bulletCollision(x, y) and not collision.enemyBulletCollision(x, y):
+        enemyCollision, enemy, i, hit = collision.enemyBulletCollision(x, y)
+
+        if not collision.bulletCollision(x, y) and not enemyCollision:
             new_bullets.append((x, y, direction))
 
-        elif collision.enemyBulletCollision(x, y):
+        
+        if enemyCollision:
             player_score += 1
-            print(player_score)
+            
+            if enemy == "runner":
+                print(assets.runnerEnemies)
+                print(i)
+                assets.runnerEnemies.remove(i)
+
+            elif enemy == "flying":
+                print(assets.flyingEnemies)
+                assets.flyingEnemies.remove(i)
+            
+            elif enemy == "tank":
+                initx, x, y, body_size, arm_size, length, move, health = i
+                if health > 0:
+                    health -= hit
+                    assets.tankEnemies[assets.tankEnemies.index(i)] = (initx, x, y, body_size, arm_size, length, move, health)
+                elif health == 0:
+                    assets.tankEnemies.remove(i)
+        
+        # print(collision.enemyBulletCollision(x, y))
 
     bullets = new_bullets
     
-        
+
+
 
 # def updatePlatforms_brittle():
 #     pass
@@ -124,20 +147,29 @@ def mouse(button, state, x, y):
             bullets.append((bullet_x, bullet_y, gun_side))
             last_bullet_time = current_time
 
-
+angle = 0
 def display():
-    global gun_side, player_x, player_y, platforms
+    global gun_side, player_x, player_y, platforms, angle
     glClear(GL_COLOR_BUFFER_BIT)
     shapes.MidpointLine(-800, -600, 800, -600)
+
+    shapes.MidpointLine(-800, 700, 800, 700, 2)
     
     for platform in platforms:
-        x1, y1, length, width, isBrittle, isMoving = platform
+        x1, y1, length, width, isBrittle, isMoving, _ = platform
         assets.normalPlatform(x1, y1, length, width)
         
-    assets.exitDoor(-200, -200)
+    assets.exitDoor(-600, 600)
     assets.player(player_x, player_y, gun_side)
     
     assets.runnerEnemy()
+    assets.flyingEnemy()
+
+    # assets.tankEnemy()
+    # assets.rotateTankEnemy(angle)
+    # angle+= 1
+
+    assets.drawHealth_Score(-750, 750, player_health, player_score)
     
     for bullet in bullets:
         x, y, _ = bullet
@@ -153,7 +185,12 @@ def animate(value):
     last_time = current_time
     updatePlayer(delta_time)
     updateBullets(delta_time)
+
     assets.moveRunnerEnemies(delta_time)
+    assets.moveFlyingEnemies(delta_time)
+    # assets.moveTankEnemies(delta_time)
+    
+    
 
     glutPostRedisplay()
     glutTimerFunc(16, animate, 0)
