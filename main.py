@@ -8,6 +8,7 @@ import assets
 import collision
 import config, end
 import level_1 as l1
+import level_2 as l2
 
 import menu  # Import the menu module
 from menu import diff_health
@@ -48,7 +49,13 @@ if config.level == 1:
     spikes = l1.spikes  # List of spikes as tuples (x1, y1)
     cannons = l1.cannons  # List of cannons as tuples (x, y)
     muds = l1.muds  # List of mud as tuples (x, y)
-    
+elif config.level == 2:
+    platforms = l2.platforms  # List of platforms as tuples (x1, y1, length, width)
+    pickups = l2.pickups  # List of pickups as tuples (x, y)
+    walls = l2.walls  # List of walls as tuples (x1, y1, height, width)
+    spikes = l2.spikes  # List of spikes as tuples (x1, y1)
+    cannons = l2.cannons  # List of cannons as tuples (x, y)
+    muds = l2.muds  # List of mud as tuples (x, y)
 cannon_last_fireball_time = [0] * len(cannons)  # List to store the last fireball time for each cannon
 
 
@@ -130,8 +137,15 @@ def updatePlayer(delta_time):
         player_immune = False
         
     if collision.exitDoorCollision(player_x, player_y):
-        print("Level Complete! Going to next level...")
-        # config.level += 1
+        if config.level == 1:
+            config.level += 1
+            player_x, player_y = -540, -540
+            glFlush()
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            print("level: ", config.level)
+        elif config.level == 2:
+            config.level = 1
+            end.show_end_screen(player_score, "CONGRATS!")
       
         
 def updateBullets(delta_time):
@@ -212,7 +226,7 @@ def updateFireballs(delta_time):
            
 
 def keyboard(key, x, y):
-    global player_x, player_y, velocity_y, isJumping, move_left, move_right, gun_side, isPaused, last_time
+    global player_x, player_y, velocity_y, isJumping, move_left, move_right, gun_side, isPaused, last_time, player_health
 
     if key == b'a' or key == b'A':
         move_left = True
@@ -227,10 +241,11 @@ def keyboard(key, x, y):
         isPaused = not isPaused
         print("Game Paused") if isPaused else print("Game Resumed")
         last_time = time.time()
-    elif key == b'q' or key == b'Q':
-        isPaused = not isPaused
-        print("Game Paused") if isPaused else print("Game Resumed")
-        last_time = time.time()
+   
+    elif key == b'r' or key == b'R':
+        player_x = -500
+        player_y = -540
+        player_health = 5
     
         
 def keyboardUp(key, x, y):
@@ -273,7 +288,19 @@ def display():
         l1.drawExitDoor_l1()
         l1.drawCeiling_l1()
         l1.drawEnemy_l1()
-        
+    elif config.level == 2:
+        l2.drawGround_l2()
+        l2.drawPlatforms_l2()
+        l2.drawPickups_l2()
+        l2.drawWalls_l2()
+        l2.drawSpikes_l2()
+        l2.drawCannons_l2()
+        l2.drawMud_l2()
+    
+
+        l2.drawExitDoor_l2()
+        l2.drawCeiling_l2()
+        l2.drawEnemy_l2()
     
     
     # Handle blinking effect
@@ -299,7 +326,7 @@ def animate(value):
     global last_time, isGameOver, isPaused, player_score
     if isGameOver:
         print(f"Game Over! Your score is {player_score}")
-        end.show_end_screen(player_score)  # Show the end screen
+        end.show_end_screen(player_score, "GAME OVER")  # Show the end screen
         
         return
     if not isGameOver and not isPaused:
@@ -313,7 +340,8 @@ def animate(value):
         if config.level == 1:
             assets.moveRunnerEnemies(delta_time, isPaused)
             assets.moveFlyingEnemies(delta_time, isPaused)
-
+        elif config.level == 2:
+            assets.moveRunnerEnemies(delta_time, isPaused)
             assets.moveTankEnemies(delta_time, isPaused)
 
     glutPostRedisplay()

@@ -94,5 +94,5 @@ def drawCeiling_l1():
 def drawEnemy_l1():
     assets.runnerEnemy()
     assets.flyingEnemy()
-    assets.tankEnemy()
+    # assets.tankEnemy()
     
