@@ -4,10 +4,31 @@ from OpenGL.GLU import *
 import midpoint_line_circle as shapes
 import config
 import level_1 as l1
+import level_2 as l2
 import random, math
 
 if config.level == 1:
-    platforms = config.platform1
+    platforms = l1.platforms  # List of platforms as tuples (x1, y1, length, width, isBrittle, isMoving)
+    pickups = l1.pickups  # List of pickups as tuples (x, y, size, color)
+    walls = l1.walls  # List of walls as tuples (x1, y1, height, width)
+    spikes = l1.spikes  # List of spikes as tuples (x1, y1)
+    muds = l1.muds  # List of muds as tuples (x1, y1)
+    exitDoor = l1.exitDoor  # Tuple of exit door as (x, y)
+    ceiling = l1.ceiling  # Tuple of ceiling as (x1, y1, x2, y2)
+
+    
+
+elif config.level == 2:
+    platforms = l2.platforms  # List of platforms as tuples (x1, y1, length, width, isBrittle, isMoving)
+    pickups = l2.pickups  # List of pickups as tuples (x, y, size, color)
+    walls = l2.walls  # List of walls as tuples (x1, y1, height, width)
+    spikes = l2.spikes  # List of spikes as tuples (x1, y1)
+    muds = l2.muds  # List of muds as tuples (x1, y1)
+    exitDoor = l2.exitDoor  # Tuple of exit door as (x, y)
+    ceiling = l2.ceiling  # Tuple of ceiling as (x1, y1, x2, y2)
+
+    
+    
 
 def exitDoor(center_x, center_y):
     shapes.MidpointCircle(center_x, center_y, 20, [0,1,2,3])
@@ -17,6 +38,8 @@ def exitDoor(center_x, center_y):
     
 def normalPlatform(x1, y1, length, size = 10):
     shapes.MidpointLine(x1, y1, x1 + length, y1, size)
+
+
 
 def wall(x1, y1, height = 20, width = 15, size = 5):
     shapes.MidpointLine(x1, y1, x1, y1 + height, size)
@@ -72,20 +95,31 @@ def drawHeartPickup(x, y, size = 2, color = (1, 0.56, 0.63)):  # x, y are the co
     shapes.MidpointLine(x - 20, y, x, y - 20, size, color)
 
 
-runnerEnemies = []
-for i in platforms:
-    if random.choice(["do", "continue"]) == "continue":
-        continue
-    print(i)
-    x, y, length, width, isBrittle, isMoving, hasEnemy = i
 
-    if not hasEnemy and length <= 400:
-        runnerEnemies.append((x, x + 10 , y + 50 , length, 5))
-        platforms[platforms.index(i)] = (x, y, length, width, isBrittle, isMoving, True)
+runnerEnemies = []
+if config.level == 1:
+    for i in platforms[ : len(platforms) - 1]:
+        if platforms.index(i) in [2, 4]:
+            continue
+        x, y, length, width, isBrittle, isMoving, hasEnemy = i
+
+        if not hasEnemy and length <= 400:
+            runnerEnemies.append((x, x + 10 , y + 50 , length, 5))
+            platforms[platforms.index(i)] = (x, y, length, width, isBrittle, isMoving, True)
+elif config.level == 2:
+    runnerEnemies = []
+    for i in platforms[ : len(platforms) - 1]:
+        if platforms.index(i) in [2, 5]:
+            continue
+        x, y, length, width, isBrittle, isMoving, hasEnemy = i
+
+        if not hasEnemy and length <= 400:
+            runnerEnemies.append((x, x + 10 , y + 50 , length, 5))
+            platforms[platforms.index(i)] = (x, y, length, width, isBrittle, isMoving, True)
 
 
 def runnerEnemy():
-
+    global runnerEnemies
     for initx, x, y, _, move in runnerEnemies:
         shapes.MidpointCircle(x, y, 10) # head
         if move < 0:
@@ -104,7 +138,7 @@ def runnerEnemy():
 
 
 def moveRunnerEnemies(dt, isPaused):
-    global runnerEnemies, enemyMove
+    global runnerEnemies
     if not isPaused:
         for i in range(len(runnerEnemies)):
             initx, x, y, bound, move = runnerEnemies[i]
@@ -123,13 +157,15 @@ def moveRunnerEnemies(dt, isPaused):
 
 
 flyingEnemies = []
-for i in range(random.randint(2, 6)):
-    x = random.randint(-760, 760)
-    y = random.randint(-300, 600)
-    move = random.choice([-1, 1])
+if config.level == 1:
+    for i in range(3):
+        x = random.choice([-760, 760])
+        y = random.choice([-150, -350, 400])
+        move = random.choice([-1, 1])
+        flyingEnemies.append((x, x, y, move))
 
-    flyingEnemies.append((x, x, y, move))
 def flyingEnemy():
+    global flyingEnemies
     for initx, x, y, _ in flyingEnemies:
         shapes.MidpointCircle(x, y, 12) # body
         shapes.MidpointLine(x - 15, y + 5, x - 15, y - 5) # left wing
@@ -152,21 +188,22 @@ def moveFlyingEnemies(dt, isPaused):
             x = int(x)
             flyingEnemies[i] = (initx, x, y, move)
 
-
 tankEnemies = []
-for i in range(random.randint(2, 3)):
 
-    temp = random.choice(platforms)
-    x, y, length, width, isBrittle, isMoving, hasEnemy = temp
-    if not hasEnemy and length > 400:
-        bodysize = 40
-        armSize = 50
-        health = 5
-        move = 4
-        tankEnemies.append((x, x +bodysize + armSize , y + 60, bodysize, armSize, length, move, health))
-        platforms[platforms.index(temp)] = (x, y, length, width, isBrittle, isMoving, True)
+if config.level == 2:
+    for platform in platforms:
+        x, y, length, width, isBrittle, isMoving, hasEnemy = platform
+        if not hasEnemy and length > 400:
+            bodysize = 40
+            armSize = 50
+            health = 5
+            move = 4
+            tankEnemies.append((x, x +bodysize + armSize , y + 60, bodysize, armSize, length, move, health))
+            platforms[platforms.index(platform)] = (x, y, length, width, isBrittle, isMoving, True)
+
+
 def tankEnemy():
-
+    global tankEnemies
     for initx, x, y, body_size, arm_size, _, move, _ in tankEnemies:
           # You can adjust these values to position the enemy
         
@@ -200,10 +237,10 @@ def moveTankEnemies(dt, isPaused):
     if not isPaused:
         for i in range(len(tankEnemies)):
             initx, x, y, body_size, arm_size, length, move, health = tankEnemies[i]
-            if x - body_size  <= initx:
-                move = -1 * move
+            if x - body_size - arm_size   <= initx:
+                move = abs(move)
             elif x + body_size + arm_size + 20 >= initx + length:
-                move = -1 * move
+                move = -abs(move)
             x += move * dt * 30
             x = int(x)
             tankEnemies[i] = (initx, x, y, body_size, arm_size, length, move, health)
@@ -232,57 +269,56 @@ def drawHealth_Score(health, score):
 
 
 
-
-
+            
 
 #Atik 
 
 
-movingPlatforms = []
+# movingPlatforms = []
 
-def initializeMovingPlatforms(platform_list):
-    """Initialize moving platforms from a list of tuples."""
-    global movingPlatforms
-    for platform in platform_list:
-        x, y, length, width, isBrittle, isMoving = platform
-        if isMoving:  # Only include moving platforms
-            movingPlatforms.append({
-                'init_x': x,       # Initial x-coordinate
-                'x': x,            # Current x-coordinate
-                'y': y,            # Current y-coordinate
-                'length': length,  # Platform length
-                'width': width,    # Platform width
-                'bound': 500,      # Example movement boundary
-                'speed': 2         # Example movement speed
-            })
+# def initializeMovingPlatforms(platform_list):
+#     """Initialize moving platforms from a list of tuples."""
+#     global movingPlatforms
+#     for platform in platform_list:
+#         x, y, length, width, isBrittle, isMoving = platform
+#         if isMoving:  # Only include moving platforms
+#             movingPlatforms.append({
+#                 'init_x': x,       # Initial x-coordinate
+#                 'x': x,            # Current x-coordinate
+#                 'y': y,            # Current y-coordinate
+#                 'length': length,  # Platform length
+#                 'width': width,    # Platform width
+#                 'bound': 500,      # Example movement boundary
+#                 'speed': 2         # Example movement speed
+#             })
 
-def movePlatforms(dt):
-    """Update the positions of moving platforms."""
-    global movingPlatforms
-    for platform in movingPlatforms:
-        init_x, x, y, length, bound, speed = (
-            platform['init_x'],
-            platform['x'],
-            platform['y'],
-            platform['length'],
-            platform['bound'],
-            platform['speed'],
-        )
+# def movePlatforms(dt):
+#     """Update the positions of moving platforms."""
+#     global movingPlatforms
+#     for platform in movingPlatforms:
+#         init_x, x, y, length, bound, speed = (
+#             platform['init_x'],
+#             platform['x'],
+#             platform['y'],
+#             platform['length'],
+#             platform['bound'],
+#             platform['speed'],
+#         )
 
-        # Reverse direction at the boundaries
-        if x <= init_x:
-            speed = abs(speed)  # Move to the right
-        elif x + length >= init_x + bound:
-            speed = -abs(speed)  # Move to the left
+#         # Reverse direction at the boundaries
+#         if x <= init_x:
+#             speed = abs(speed)  # Move to the right
+#         elif x + length >= init_x + bound:
+#             speed = -abs(speed)  # Move to the left
 
-        # Update position
-        x += speed * dt
-        platform['x'] = x
-        platform['speed'] = speed
+#         # Update position
+#         x += speed * dt
+#         platform['x'] = x
+#         platform['speed'] = speed
         
-def drawMovingPlatforms():
-    """Draw all moving platforms."""
-    global movingPlatforms
-    for platform in movingPlatforms:
-        x, y, length = platform['x'], platform['y'], platform['length']
-        shapes.MidpointLine(x, y, x + length, y, 10, (0.2, 0.8, 0.8))  # Light blue for moving platforms
+# def drawMovingPlatforms():
+#     """Draw all moving platforms."""
+#     global movingPlatforms
+#     for platform in movingPlatforms:
+#         x, y, length = platform['x'], platform['y'], platform['length']
+#         shapes.MidpointLine(x, y, x + length, y, 10, (0.2, 0.8, 0.8))  # Light blue for moving platforms

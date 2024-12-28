@@ -5,7 +5,7 @@ from midpoint_line_circle import midpoint_line_8way
 import os
 import menu
 score = 0
-
+end_text= "GAME OVER"
 def initialize_end_screen():
     """Initialize OpenGL settings for the end screen."""
     glClearColor(0.0, 0.0, 0.0, 0.0)  # Black background
@@ -24,7 +24,8 @@ def draw_end_screen():
     glTranslatef(-370, 300, 0)  # Position at the top center
     glScalef(1.0, 1.0, 1.0)  # Scale to make it large
     glLineWidth(2)  # Set line width for the stroke font
-    for char in "GAME OVER":
+
+    for char in end_text:
         glutStrokeCharacter(GLUT_STROKE_ROMAN, ord(char))
     glPopMatrix()
 
@@ -82,9 +83,11 @@ def end_screen_mouse(button, state, x, y):
             print("Exit clicked - exiting game")
             os._exit(0)  # Exit the program
 
-def show_end_screen(final_score):
+def show_end_screen(final_score, end):
+
     """Displays the end screen."""
-    global score
+    global score, end_text
+    end_text = end
     score = final_score
     initialize_end_screen()
     glutDisplayFunc(draw_end_screen)

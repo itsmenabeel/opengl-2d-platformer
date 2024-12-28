@@ -7,36 +7,68 @@ import midpoint_line_circle as shapes
 import assets
 
 platforms = [
-    (-790, -300, 300, 5, False, False, False),
-    (150, 50, 400, 5, True, False, False),
-    (80, 225, 300, 5, False, False, False),
-    (100, -280, 250, 5, False, False, False),
-    (-300, 450, 200, 5, False, False, False),
-]  # List of platforms as tuples (x1, y1, length, width, isBrittle, isMoving)
+    (-790, -280, 300, 5, False, False, False),  # bot 1
+    (150, 50, 320, 5, False, False, False),  # mid 1
+    (-300, 135, 230, 5, False, False, False),  # mid 3 (no enemy)
+    (-550, 325, 200, 5, False, False, False),  # mid 5
+    (-450, -80, 80, 5, False, False, False),  # mid 4
+    (550, -240, 100, 5, False, False, False),  # bot 3
+    (660, -100, 70, 5, False, False, False),  # bot 4 (no enemy)
+    (120, 225, 265, 5, False, False, False),  #mid 2
+    (90, -280, 250, 5, False, False, False),  # bot 2
+    (-300, 480, 200, 5, False, False, False),  # Door
+]  # List of platforms as tuples (x1, y1, length, width, isBrittle, isMoving, hasEnemy)
 pickups = [
-    (500, 500)
+    (600, -550)
 ]  # List of pickups as tuples (x, y, size, color)
 walls = [
     (-200, -600, 50, 180),
-    (-300, -600, 50, 120)
+    (-300, -600, 50, 120),
+    (-100, 135, 30, 80)
 ]  # List of walls as tuples (x1, y1, height, width)
 spikes = [
     (-245, -600),  # 40 pixel across
     (60, -600),
-    (20, -600)
+    (20, -600),
+    (430, 55),
+    (-300, 135)
 ]  # List of spikes as tuples (x1, y1)
 cannons = [
-    (-770, 500),
-    (-770, 300),
+    (-770, 530),
     (770, 100)
 ]
 muds = [
-    (500, -600),
-    (540, -600)
+    (500, -600),  # 30 pixel across
+    (540, -600),
+    (450, -600),
+    (120, 225),
+    (-520, -280)
 ]
-exitDoor = (-200, 500)
+exitDoor = (-200, 530)
 ground = (-800, -600, 800, -600)
 ceiling = (-800, 700, 800, 700)
+
+
+# runnerEnemies = []
+
+# for i in platforms[ : len(platforms) - 1]:
+#     if platforms.index(i) in [2, 4]:
+#         continue
+#     x, y, length, width, isBrittle, isMoving, hasEnemy = i
+
+#     if not hasEnemy and length <= 400:
+#         runnerEnemies.append((x, x + 10 , y + 50 , length, 5))
+#         platforms[platforms.index(i)] = (x, y, length, width, isBrittle, isMoving, True)
+
+
+
+# flyingEnemies = []
+
+# for i in range(3):
+#     x = random.choice([-760, 760])
+#     y = random.choice([-150, -350, 400])
+#     move = random.choice([-1, 1])
+#     flyingEnemies.append((x, x, y, move))
 
 def drawPlatforms_l1():
     for platform in platforms:
@@ -84,5 +116,5 @@ def drawCeiling_l1():
 def drawEnemy_l1():
     assets.runnerEnemy()
     assets.flyingEnemy()
-    assets.tankEnemy()
+    # assets.tankEnemy()
     

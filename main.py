@@ -8,6 +8,7 @@ import assets
 import collision
 import config, end
 import level_1 as l1
+import level_2 as l2
 
 import menu  # Import the menu module
 from menu import diff_health
@@ -42,6 +43,10 @@ fireball_cooldown = 2  # Cooldown period in secondsa
 bullets = []  # List to store active bullets as tuples (x, y, direction)
 fireballs = []  # List to store active fireballs as tuples (x, y, direction)
 
+
+brittle_time = 1
+brittle_cooldown = 3
+
 if config.level == 1:
     platforms = l1.platforms  # List of platforms as tuples (x1, y1, length, width)
     pickups = l1.pickups  # List of pickups as tuples (x, y)
@@ -49,6 +54,13 @@ if config.level == 1:
     spikes = l1.spikes  # List of spikes as tuples (x1, y1)
     cannons = l1.cannons  # List of cannons as tuples (x, y)
     muds = l1.muds  # List of mud as tuples (x, y)
+elif config.level == 2:
+    platforms = l2.platforms  # List of platforms as tuples (x1, y1, length, width)
+    pickups = l2.pickups  # List of pickups as tuples (x, y)
+    walls = l2.walls  # List of walls as tuples (x1, y1, height, width)
+    spikes = l2.spikes  # List of spikes as tuples (x1, y1)
+    cannons = l2.cannons  # List of cannons as tuples (x, y)
+    muds = l2.muds  # List of mud as tuples (x, y)
     
 cannon_last_fireball_time = [0] * len(cannons)   # List of cannons as tuples (x, y)
 
@@ -124,6 +136,8 @@ def updatePlayer(delta_time):
                 player_x += player_speed * delta_time if player_x + 12 < 800 else 0
             else:
                 player_x += (player_speed / 2) * delta_time if player_x + 12 < 800 else 0    
+    
+    
 
     # Keep player within screen bounds
     if player_y < -557:
@@ -135,10 +149,18 @@ def updatePlayer(delta_time):
     if player_immune and (time.time() - last_hit_time > hit_flash_duration):
         player_immune = False
         
-    if collision.exitDoorCollision(player_x, player_y):
-        print("Level Complete! Going to next level...")
-        # config.level += 1
         
+    if collision.exitDoorCollision(player_x, player_y):
+        if config.level == 1:
+            config.level += 1
+            player_x, player_y = -540, -540
+            glFlush()
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            print("level: ", config.level)
+        elif config.level == 2:
+            config.level = 1
+            end.show_end_screen(player_score, "CONGRATS!")
+
 def updateBullets(delta_time):
     global bullets, player_score
     new_bullets = []
@@ -272,7 +294,20 @@ def display():
         l1.drawExitDoor_l1()
         l1.drawCeiling_l1()
         l1.drawEnemy_l1()
-        
+
+    elif config.level == 2:
+        l2.drawGround_l2()
+        l2.drawPlatforms_l2()
+        l2.drawPickups_l2()
+        l2.drawWalls_l2()
+        l2.drawSpikes_l2()
+        l2.drawCannons_l2()
+        l2.drawMud_l2()
+    
+
+        l2.drawExitDoor_l2()
+        l2.drawCeiling_l2()
+        l2.drawEnemy_l2()
     
     
     # Handle blinking effect
@@ -298,7 +333,7 @@ def animate(value):
     global last_time, isGameOver, isPaused, player_score
     if isGameOver:
         print(f"Game Over! Your score is {player_score}")
-        end.show_end_screen(player_score)  # Show the end screen
+        end.show_end_screen(player_score, "GAME OVER")  # Show the end screen
         
         return
     if not isGameOver and not isPaused:
@@ -312,8 +347,10 @@ def animate(value):
         if config.level == 1:
             assets.moveRunnerEnemies(delta_time, isPaused)
             assets.moveFlyingEnemies(delta_time, isPaused)
-
+        elif config.level == 2:
+            assets.moveRunnerEnemies(delta_time, isPaused)
             assets.moveTankEnemies(delta_time, isPaused)
+            
 
     glutPostRedisplay()
     glutTimerFunc(16, animate, 0)
